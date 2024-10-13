@@ -1,9 +1,9 @@
 "use client"
 //app/dashboard/page.tsx
-import { useState, useEffect, FormEvent } from 'react'
+import { useState, useEffect, FormEvent, useCallback } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { Sun, Moon, Search, User, Heart, LogOut, Plus, MapPin, Calendar } from 'lucide-react'
+import { Sun, Moon, User, Heart, LogOut, Plus, MapPin, Calendar } from 'lucide-react'
 import { toast, Toaster } from 'sonner'
 import NewItineraryPopup from '../components/NewItineraryPopup'
 import FavoritesPopup from '../components/FavoritesPopup'
@@ -61,7 +61,7 @@ export default function Dashboard() {
         return () => unsubscribe();
     }, []);
 
-    const fetchItineraries = async () => {
+    const fetchItineraries = useCallback(async () => {
         if (userId) {
             try {
                 const response = await axios.get(`/api/itineraries`, {
@@ -79,9 +79,9 @@ export default function Dashboard() {
                 toast.error('Failed to fetch itineraries');
             }
         }
-    };
+    }, [userId, tripTypeFilter, searchQuery]);
 
-    const fetchFavorites = async () => {
+    const fetchFavorites = useCallback(async () => {
         if (userId) {
             try {
                 const response = await axios.get('/api/favorites', {
@@ -98,12 +98,14 @@ export default function Dashboard() {
                 toast.error('An error occurred while fetching favorites.');
             }
         }
-    };
+    }, [userId]);
 
     useEffect(() => {
-        fetchItineraries();
-        fetchFavorites();
-    }, [userId, tripTypeFilter, searchQuery]);
+        if (userId) {
+            fetchItineraries();
+            fetchFavorites();
+        }
+    }, [userId, tripTypeFilter, searchQuery, fetchItineraries, fetchFavorites]);
 
     useEffect(() => {
         if (isDarkMode) {
@@ -331,8 +333,10 @@ export default function Dashboard() {
                                             <div className="flex-1">
                                                 <h3 className="font-semibold">Trip: {itinerary.title}</h3>
                                                 <p className="text-gray-600 dark:text-gray-400">Destination: {itinerary.destination}</p>
-                                                <p className='text-gray-600 dark:text-gray-400'> Date: {itinerary.activity?.date} </p>
-                                                <p className='text-gray-600 dark:text-gray-400'> Activity: {itinerary.activity?.description} </p>
+                                                {/* @ts-except-error */}
+                                                <p className='text-gray-600 dark:text-gray-400'> Date: {itinerary.activity?.[0]?.date} </p>
+                                                {/* @ts-except-error */}
+                                                <p className='text-gray-600 dark:text-gray-400'> Activity: {itinerary.activity?.[0]?.description} </p>
 
                                             </div>
                                             <button

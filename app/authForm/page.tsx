@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import Link from "next/link";
 import { Eye, EyeOff, Mail, Lock, User } from "lucide-react";
 import { useSearchParams } from "next/navigation";
@@ -10,7 +10,7 @@ import { signIn, signUp, signInWithGoogle } from "@/firebase/auth"; // Import yo
 import { useRouter } from "next/navigation";
 
 
-export default function AuthForm() {
+function AuthFormContent() {
     const searchParams = useSearchParams();
     const isLogin = searchParams.get("isLogin") === "true";
     const [showPassword, setShowPassword] = useState(false);
@@ -25,8 +25,8 @@ export default function AuthForm() {
             const user = userCredential.user;
             toast.success(`Successfully signed in with Google! Welcome, ${user.displayName}`);
             router.push("/dashboard");
-        } catch (error: any) {
-            toast.error(`Google Sign-In failed: ${error.message}`);
+        } catch (error: unknown) {
+            toast.error(`Google Sign-In failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
     };
 
@@ -45,8 +45,8 @@ export default function AuthForm() {
                 toast.success("Successfully signed up!");
                 router.push("/dashboard");
             }
-        } catch (error: any) {
-            toast.error(`Failed to ${isLogin ? "sign in" : "sign up"}: ${error.message}`);
+        } catch (error: unknown) {
+            toast.error(`Failed to ${isLogin ? "sign in" : "sign up"}: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
     };
 
@@ -150,8 +150,7 @@ export default function AuthForm() {
                             </Link>
                             <span className="mx-2">•</span>
                             <Link href="/authForm?isLogin=false" className="text-[#A594F9] hover:underline">
-                                Don't have an account? Sign up
-                            </Link>
+                            Don&apos;t have an account? Sign up                            </Link>
                         </>
                     ) : (
                         <p>
@@ -165,5 +164,13 @@ export default function AuthForm() {
             </div>
             <Toaster />
         </div>
+    );
+}
+
+export default function AuthForm() {
+    return (
+        <Suspense fallback={<div>Loading...</div>}>
+            <AuthFormContent />
+        </Suspense>
     );
 }
