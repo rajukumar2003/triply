@@ -333,11 +333,10 @@ export default function Dashboard() {
                                             <div className="flex-1">
                                                 <h3 className="font-semibold">Trip: {itinerary.title}</h3>
                                                 <p className="text-gray-600 dark:text-gray-400">Destination: {itinerary.destination}</p>
-                                                {/* @ts-except-error */}
-                                                <p className='text-gray-600 dark:text-gray-400'> Date: {itinerary.activity?.[0]?.date} </p>
-                                                {/* @ts-except-error */}
-                                                <p className='text-gray-600 dark:text-gray-400'> Activity: {itinerary.activity?.[0]?.description} </p>
-
+                                                {/* @ts-expect-error Server component */}
+                                                <p className='text-gray-600 dark:text-gray-400'> Date: {itinerary.activity?.date} </p>
+                                                {/* @ts-expect-error Server component */}
+                                                <p className='text-gray-600 dark:text-gray-400'> Activity: {itinerary.activity?.description} </p>
                                             </div>
                                             <button
                                                 onClick={() => toggleFavorite(itinerary.id)}
