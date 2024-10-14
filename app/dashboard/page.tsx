@@ -331,8 +331,9 @@ export default function Dashboard() {
                                                 className="rounded-lg object-cover" 
                                             />
                                             <div className="flex-1">
-                                                <h3 className="font-semibold">Trip: {itinerary.title}</h3>
-                                                <p className="text-gray-600 dark:text-gray-400">Destination: {itinerary.destination}</p>
+                                                <h2 className="font-semibold">Trip: {itinerary.title}</h2>
+                                                <h3 className=" font-semibold">Destination: {itinerary.destination}</h3>
+                                                <p className='text-gray-600 dark:text-gray-400'>Trip Type: { itinerary.tripType}</p>
                                                 {/* @ts-expect-error Server component */}
                                                 <p className='text-gray-600 dark:text-gray-400'> Date: {itinerary.activity?.date} </p>
                                                 {/* @ts-expect-error Server component */}

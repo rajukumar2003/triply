@@ -1,39 +1,31 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { collection, addDoc, getDocs, query, where } from "firebase/firestore";
-import { db, storage } from '@/firebase/firebaseConfig';
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { db } from '@/firebase/firebaseConfig';
 
 export async function POST(request: NextRequest) {
     try {
-        const formData = await request.formData();
-        const userId = formData.get('userId') as string;
-        const title = formData.get('title') as string;
-        const destination = formData.get('destination') as string;
-        const tripType = formData.get('tripType') as string;
-        const activity = JSON.parse(formData.get('activity') as string);
-        const image = formData.get('image') as File;
+        const body = await request.json();
+        const { userId, title, destination, tripType, activity, imageUrl } = body;
 
-        if (!userId || !title || !destination || !tripType || !activity || !image) {
+        // Validate input
+        if (!userId || !title || !destination || !tripType || !activity || !imageUrl) {
             return NextResponse.json(
                 { success: false, message: 'Missing or invalid required fields. Please try again.' },
                 { status: 400 }
             );
         }
 
-        const storageRef = ref(storage, `images/${image.name}`);
-        const snapshot = await uploadBytes(storageRef, image);
-        const imageUrl = await getDownloadURL(snapshot.ref);
-
         const itineraryData = {
             userId,
             title,
             destination,
             tripType,
-            activity,
+            activity: JSON.parse(activity), // Ensure activity is parsed as an object
             imageUrl,
             createdAt: new Date().toISOString(),
         };
 
+        // Add itinerary to Firestore
         const itineraryRef = await addDoc(collection(db, 'itineraries'), itineraryData);
 
         return NextResponse.json(
@@ -55,6 +47,8 @@ export async function POST(request: NextRequest) {
         );
     }
 }
+
+
 
 
 //GET method to get the itineraries

@@ -7,6 +7,8 @@ import { toast, Toaster } from 'sonner'
 import axios from 'axios'
 import { onAuthStateChanged } from 'firebase/auth'
 import { auth } from '../../firebase/firebaseConfig'
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { storage } from '@/firebase/firebaseConfig';
 
 interface NewItineraryPopupProps {
     isOpen: boolean;
@@ -24,14 +26,16 @@ export default function NewItineraryPopup({ isOpen, onClose, refreshItineraries 
     const [title, setTitle] = useState('')
     const [destination, setDestination] = useState('')
     const [activity, setActivity] = useState<Activity>({ destination: '', description: '', date: '' })
-    const [image, setImage] = useState<string>('')
+    const [image, setImage] = useState<File | null>(null)
+    const [imagePreview, setImagePreview] = useState<string>('')
     const [isLoading, setIsLoading] = useState(false)
     const [tripType, setTripType] = useState('')
 
     const handleImageUpload = (e: ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
             const file = e.target.files[0]
-            setImage(URL.createObjectURL(file))
+            setImage(file)
+            setImagePreview(URL.createObjectURL(file))
         }
     }
 
@@ -44,40 +48,54 @@ export default function NewItineraryPopup({ isOpen, onClose, refreshItineraries 
         return () => unsubscribe()
     }, [])
 
+    async function uploadImageToFirebase(image: File) {
+        try {
+            const storageRef = ref(storage, `images/${image.name}`);
+            const snapshot = await uploadBytes(storageRef, image);
+            const imageUrl = await getDownloadURL(snapshot.ref);
+            return imageUrl;
+        } catch (error) {
+            console.error("Error uploading image:", error);
+            throw new Error("Failed to upload image");
+        }
+    }
 
     const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault()
         setIsLoading(true)
 
-        const formData = new FormData()
-        if (userId) {
-            formData.append('userId', userId)
-        } else {
-            toast.error('Please login to create an itinerary')
-            return
-        }
-        formData.append('title', title)
-        formData.append('destination', destination)
-        formData.append('tripType', tripType)
-        formData.append('activity', JSON.stringify(activity))
-
+        let imageUrl = ''
         if (image) {
-            const response = await fetch(image)
-            const blob = await response.blob()
-            const file = new File([blob], title + '.jpg', { type: 'image/jpeg' })
-            formData.append('image', file)
+            try {
+                imageUrl = await uploadImageToFirebase(image)
+            } catch {
+                toast.error('Failed to upload image')
+                setIsLoading(false)
+                return
+            }
+        }
+
+        const formData = {
+            userId,
+            title,
+            destination,
+            tripType,
+            activity: JSON.stringify(activity),
+            imageUrl
+        }
+
+        if (!userId) {
+            toast.error('Please login to create an itinerary')
+            setIsLoading(false)
+            return
         }
 
         try {
-            const response = await axios.post('/api/itineraries', formData, {
-                headers: {
-                    'Content-Type': 'multipart/form-data'
-                }
-            })
+            const response = await axios.post('/api/itineraries', formData)
 
             if (response.status === 201) {
                 toast.success('Itinerary created successfully!')
-                refreshItineraries()  // Refreshing the itineraries after creating a new one
+                refreshItineraries()
                 onClose()
             } else {
                 toast.error(response.data.message || 'Failed to create itinerary')
@@ -175,13 +193,13 @@ export default function NewItineraryPopup({ isOpen, onClose, refreshItineraries 
                         </div>
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">Photo</label>
-                            {image && (
+                            {imagePreview && (
                                 <div className="relative mb-4">
-                                    <Image src={image} alt="Uploaded image" width={100} height={100} className="rounded-md" />
+                                    <Image src={imagePreview} alt="Uploaded image" width={100} height={100} className="rounded-md" />
                                     <button
                                         type="button"
                                         title="Remove photo"
-                                        onClick={() => setImage('')}
+                                        onClick={() => { setImage(null); setImagePreview(''); }}
                                         className="absolute top-0 right-0 bg-red-500 text-white rounded-full p-1"
                                     >
                                         <X className="h-4 w-4" />
@@ -202,16 +220,16 @@ export default function NewItineraryPopup({ isOpen, onClose, refreshItineraries 
                         <div className="flex justify-end">
                             <button
                                 type="submit"
-                                className="px-4 py-2 bg-[#6d71f9] text-white rounded-md hover:bg-[#5a5ed6] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#6d71f9]"
+                                className="px-4 py-2 bg-[#6d71f9] text-white rounded-md hover:bg-[#5a5ed3] transition duration-200"
                                 disabled={isLoading}
                             >
-                                {isLoading ? 'Creating...' : 'Create Itinerary'}
+                                {isLoading ? 'Saving...' : 'Save Itinerary'}
                             </button>
                         </div>
                     </form>
+                    <Toaster position="bottom-center" />
                 </div>
             </div>
-            <Toaster />
         </div>
     )
 }
