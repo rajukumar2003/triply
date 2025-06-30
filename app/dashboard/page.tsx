@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 
-import { Plus, Heart, MapPin, Calendar } from 'lucide-react'
+import { Plus, Heart } from 'lucide-react'
 import { toast, Toaster } from 'sonner'
 import NewItineraryPopup from '../components/NewItineraryPopup'
 import FavoritesPopup from '../components/FavoritesPopup'
@@ -25,7 +25,7 @@ export interface Itinerary {
         date: string;
         description: string;
         destination: string;
-    }[];
+    };
 }
 
 export default function Dashboard() {
@@ -39,16 +39,7 @@ export default function Dashboard() {
     const [userName, setUserName] = useState<string | null>(null);
     const [favoriteIds, setFavoriteIds] = useState<Set<string>>(new Set());
 
-    // Protection from unauthorized access
-    useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, (user) => {
-            if (!user) {
-                router.push('/authForm?isLogin=true');
-            }
-        });
-        return () => unsubscribe();
-    }, []);
-
+    // Combined effect for auth state changes
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, (user) => {
             if (user) {
@@ -57,10 +48,11 @@ export default function Dashboard() {
             } else {
                 setUserId(null);
                 setUserName(null);
+                router.push('/authForm?isLogin=true');
             }
         });
         return () => unsubscribe();
-    }, []);
+    }, [router]);
 
     const fetchItineraries = useCallback(async () => {
         if (userId) {

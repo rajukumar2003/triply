@@ -44,16 +44,21 @@ export default function ItineraryListSection({
                             <p className="text-gray-600 dark:text-gray-400 text-sm">
                                 Trip Type: {itinerary.tripType}
                             </p>
-                            {itinerary.activity && (
+                            {itinerary.activity ? (
                                 <>
                                     <p className="text-gray-600 dark:text-gray-400 text-sm">
-                                        Date: {itinerary.activity.date}
+                                        Date: {itinerary.activity.date || "Not provided"}
                                     </p>
                                     <p className="text-gray-600 dark:text-gray-400 text-sm">
                                         Activity:
                                         {itinerary.activity.description ||
                                             "Not provided"}
                                     </p>
+                                </>
+                            ) : (
+                                <>
+                                    <p className="text-gray-600 dark:text-gray-400 text-sm">Date: Not provided</p>
+                                    <p className="text-gray-600 dark:text-gray-400 text-sm">Activity: Not provided</p>
                                 </>
                             )}
                         </div>
