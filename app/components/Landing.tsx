@@ -134,7 +134,7 @@ const LandingPage: React.FC = () => {
                     <div className="flex flex-col md:flex-row justify-between items-center">
                         <div className="mb-8 md:mb-0">
                             <Link href="/" className="text-2xl font-bold text-[#A594F9]">Triply</Link>
-                            <p className="text-gray-600 mt-2">&copy; 2024 Triply. All rights reserved.</p>
+                            <p className="text-gray-600 mt-2">&copy; 2025 Triply. All rights reserved.</p>
                         </div>
                         <div className="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-8">
                             <Link href="/about" className="text-gray-600 hover:text-[#A594F9] transition-colors">About Us</Link>
